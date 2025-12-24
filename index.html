@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="sheet.js"></script>
+    <script src="chart.js"></script>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+    <div class="flex h-screen overflow-hidden">
+
+        <aside class="w-64 bg-slate-800 text-white flex-shrink-0 hidden md:block">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold">UniDash</h1>
+            </div>
+            <nav class="mt-6">
+                <a href="#" id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-item block py-2.5 px-4 bg-slate-700 border-l-4 border-blue-500 transition duration-200">
+                    Dashboard
+                </a>
+                <a href="#" id="nav-students" onclick="switchTab('students')" class="nav-item block py-2.5 px-4 hover:bg-slate-700 border-l-4 border-transparent transition duration-200">
+                    Students List
+                </a>
+                <a href="#" id="nav-academics" onclick="switchTab('academics')" class="nav-item block py-2.5 px-4 hover:bg-slate-700 border-l-4 border-transparent transition duration-200">
+                    Academics
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+            
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                <h3 class="text-gray-700 text-3xl font-semibold" id="page-title">Dashboard Overview</h3>
+                
+                <div class="mt-4 md:mt-0 relative">
+                    <label for="fileInput" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded cursor-pointer shadow flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Upload Excel/CSV
+                    </label>
+                    <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" class="hidden" />
+                </div>
+            </div>
+
+            <div id="view-dashboard" class="view-section">
+                <div class="mb-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-lg shadow p-5 border-l-4 border-blue-500">
+                            <div class="text-sm font-medium text-gray-500 truncate">Total Students</div>
+                            <div class="mt-1 text-3xl font-semibold text-gray-900" id="stat-total">0</div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-5 border-l-4 border-green-500">
+                            <div class="text-sm font-medium text-gray-500 truncate">Average GPA</div>
+                            <div class="mt-1 text-3xl font-semibold text-gray-900" id="stat-gpa">0.00</div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-5 border-l-4 border-yellow-500">
+                            <div class="text-sm font-medium text-gray-500 truncate">Scholarship Holders</div>
+                            <div class="mt-1 text-3xl font-semibold text-gray-900" id="stat-scholarship">0</div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-5 border-l-4 border-purple-500">
+                            <div class="text-sm font-medium text-gray-500 truncate">On-Campus Residents</div>
+                            <div class="mt-1 text-3xl font-semibold text-gray-900" id="stat-housing">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h4 class="text-gray-500 text-sm font-bold mb-4">Students by State</h4>
+                            <div class="relative h-64 w-full">
+                                <canvas id="chartState"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h4 class="text-gray-500 text-sm font-bold mb-4">Year of Study</h4>
+                            <div class="relative h-64 w-full flex justify-center">
+                                <canvas id="chartYear"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-students" class="view-section hidden">
+                <div class="bg-white shadow rounded-lg overflow-hidden overflow-x-auto">
+                    <table class="min-w-full leading-normal">
+                        <thead>
+                            <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th class="px-5 py-3 border-b-2 border-gray-200">ID</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200">Name</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200">Gender</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200">State</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200">Program</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200">GPA</th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-student-body">
+                            <tr><td colspan="6" class="p-5 text-center text-gray-500">No data loaded</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-academics" class="view-section hidden">
+                <div class="mb-6">
+                    <h4 class="text-xl font-bold text-gray-700 mb-2">Program Performance Analysis</h4>
+                    <p class="text-gray-500 text-sm">Breakdown of student distribution and average GPA by program.</p>
+                </div>
+
+                <div class="bg-white shadow rounded-lg overflow-hidden overflow-x-auto">
+                    <table class="min-w-full leading-normal">
+                        <thead>
+                            <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th class="px-5 py-3 border-b-2 border-gray-200">Program of Study</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200">Total Students</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200">Average GPA</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200">Performance Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="academics-body">
+                            <tr><td colspan="4" class="p-5 text-center text-gray-500">No data loaded</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Global Data Store
+        let globalData = [];
+        let stateChartInstance = null;
+        let yearChartInstance = null;
+
+        // --- NAVIGATION LOGIC ---
+        function switchTab(tabName) {
+            // 1. Update Title
+            const titles = {
+                'dashboard': 'Dashboard Overview',
+                'students': 'All Student Records',
+                'academics': 'Academic Performance'
+            };
+            document.getElementById('page-title').innerText = titles[tabName];
+
+            // 2. Hide all sections
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            
+            // 3. Show selected section
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+            // 4. Update Sidebar Styles
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-slate-700', 'border-blue-500');
+                el.classList.add('hover:bg-slate-700', 'border-transparent');
+            });
+            
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            activeNav.classList.add('bg-slate-700', 'border-blue-500');
+            activeNav.classList.remove('hover:bg-slate-700', 'border-transparent');
+        }
+
+
+        // --- FILE UPLOAD LOGIC ---
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    globalData = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (globalData.length > 0) {
+                        alert(`Loaded ${globalData.length} records successfully!`);
+                        updateAllViews(globalData);
+                    } else {
+                        alert("File is empty.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Error processing file.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // --- UPDATE ALL VIEWS ---
+        function updateAllViews(data) {
+            updateDashboard(data);
+            updateStudentsList(data);
+            updateAcademics(data);
+        }
+
+        // 1. DASHBOARD LOGIC
+        function updateDashboard(data) {
+            // Metrics
+            const total = data.length;
+            const avgGpa = (data.reduce((sum, r) => sum + (parseFloat(r['GPA'])||0), 0) / total).toFixed(2);
+            const scholarships = data.filter(r => (r['Scholarship Status']||'').toLowerCase() === 'yes').length;
+            const residents = data.filter(r => (r['Accommodation']||'').includes('On-Campus')).length;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-gpa').innerText = avgGpa;
+            document.getElementById('stat-scholarship').innerText = scholarships;
+            document.getElementById('stat-housing').innerText = residents;
+
+            // Charts
+            renderCharts(data);
+        }
+
+        function renderCharts(data) {
+            // State Chart
+            const stateCounts = {};
+            data.forEach(r => { const s = r['State of Origin']||'Unknown'; stateCounts[s] = (stateCounts[s]||0)+1; });
+            
+            const ctxState = document.getElementById('chartState').getContext('2d');
+            if(stateChartInstance) stateChartInstance.destroy();
+            stateChartInstance = new Chart(ctxState, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(stateCounts),
+                    datasets: [{
+                        label: 'Students',
+                        data: Object.values(stateCounts),
+                        backgroundColor: '#3b82f6'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Year Chart
+            const yearCounts = {};
+            data.forEach(r => { const y = r['Year of Study']||'Unknown'; yearCounts[y] = (yearCounts[y]||0)+1; });
+            const sortedYears = Object.keys(yearCounts).sort();
+
+            const ctxYear = document.getElementById('chartYear').getContext('2d');
+            if(yearChartInstance) yearChartInstance.destroy();
+            yearChartInstance = new Chart(ctxYear, {
+                type: 'doughnut',
+                data: {
+                    labels: sortedYears.map(y => 'Year '+y),
+                    datasets: [{
+                        data: sortedYears.map(y => yearCounts[y]),
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        // 2. STUDENTS LIST LOGIC
+        function updateStudentsList(data) {
+            const tbody = document.getElementById('full-student-body');
+            tbody.innerHTML = '';
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition";
+                tr.innerHTML = `
+                    <td class="px-5 py-4 border-b border-gray-200 text-sm text-gray-900">${row['Student ID'] || '-'}</td>
+                    <td class="px-5 py-4 border-b border-gray-200 text-sm font-medium text-gray-900">${row['Name'] || 'Unknown'}</td>
+                    <td class="px-5 py-4 border-b border-gray-200 text-sm text-gray-700">${row['Gender'] || '-'}</td>
+                    <td class="px-5 py-4 border-b border-gray-200 text-sm text-gray-700">${row['State of Origin'] || '-'}</td>
+                    <td class="px-5 py-4 border-b border-gray-200 text-sm text-gray-700">${row['Program of Study'] || '-'}</td>
+                    <td class="px-5 py-4 border-b border-gray-200 text-sm font-bold text-blue-600">${row['GPA'] || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 3. ACADEMICS LOGIC
+        function updateAcademics(data) {
+            const tbody = document.getElementById('academics-body');
+            tbody.innerHTML = '';
+
+            // Group by Program
+            const programs = {};
+            data.forEach(row => {
+                const prog = row['Program of Study'] || 'Unknown';
+                if (!programs[prog]) programs[prog] = { count: 0, totalGPA: 0 };
+                
+                programs[prog].count++;
+                programs[prog].totalGPA += parseFloat(row['GPA']) || 0;
+            });
+
+            // Convert to array and sort by GPA
+            const stats = Object.keys(programs).map(prog => {
+                const avg = programs[prog].totalGPA / programs[prog].count;
+                return { name: prog, count: programs[prog].count, avg: avg.toFixed(2) };
+            }).sort((a,b) => b.avg - a.avg);
+
+            stats.forEach(item => {
+                let statusColor = "text-gray-500";
+                let statusText = "Average";
+                if(item.avg >= 3.5) { statusColor = "text-green-600 font-bold"; statusText = "Excellent"; }
+                else if(item.avg < 3.0) { statusColor = "text-red-500"; statusText = "Needs Attention"; }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-5 py-4 border-b border-gray-200 text-sm font-medium text-gray-900">${item.name}</td>
+                    <td class="px-5 py-4 border-b border-gray-200 text-sm text-gray-700">${item.count}</td>
+                    <td class="px-5 py-4 border-b border-gray-200 text-sm font-bold text-gray-800">${item.avg}</td>
+                    <td class="px-5 py-4 border-b border-gray-200 text-sm ${statusColor}">${statusText}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
